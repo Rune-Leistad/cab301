@@ -18,6 +18,7 @@ public class MainAss2 {
                 output1.createNewFile();
             if(!output2.exists())
                 output2.createNewFile();
+            // Setting column names
             writeToFile(output1, "Array size,Basic operations,Time");
             writeToFile(output2, "Array size,Basic operations,Time");
 
@@ -35,23 +36,32 @@ public class MainAss2 {
                 for(int j = 0; j < avgIter; j++)
                     arrayList[j] = randomGenArray(i);
 
+
                 bo1Counter = 0;
+                bo2Counter = 0;
+                // Measuring time Levitin's algorithm
                 long avgTime1 = System.currentTimeMillis();
                 for(int j = 0; j < avgIter; j++)
-                    minDistance(arrayList[j]);
+                    minDistance(arrayList[j], false);
                 avgTime1 = System.currentTimeMillis() - avgTime1;
-
-                bo2Counter = 0;
+                // Measuring time for second algorithm
                 long avgTime2 = System.currentTimeMillis();
                 for(int j = 0; j < 100; j++)
-                    minDistance2(arrayList[j]);
+                    minDistance2(arrayList[j], false);
                 avgTime2 = System.currentTimeMillis() - avgTime2;
 
+                // Counting basic operations
+                for(int j = 0; j < avgIter; j++)
+                    minDistance(arrayList[j], true);
+                for(int j = 0; j < avgIter; j++)
+                    minDistance2(arrayList[j], true);
+
+                // Writing test results to file
                 writeToFile(output1, String.format("%d,%d,%d", i, bo1Counter/avgIter, avgTime1/avgIter));
                 writeToFile(output2, String.format("%d,%d,%d", i, bo2Counter/avgIter, avgTime2/avgIter));
             }
 
-            // i = array size. Increments by 1000 each time
+            // i = array size. Increments by 1000 each time.
             for(int i = 5000; i < maxArraySize; i+=incrementSize) {
                 for (int j = 0; j < iterationSize; j++) {
                     // Generating the pseudo random array for testing the algorithm
@@ -60,15 +70,17 @@ public class MainAss2 {
                     // Levetin's algorithm
                     bo1Counter = 0;
                     long time1 = System.currentTimeMillis(); // Starting time
-                    long res1 = minDistance(testArray);
+                    long res1 = minDistance(testArray, false);
                     time1 = System.currentTimeMillis() - time1; // Stopping time
+                    minDistance(testArray, true); // Counting basic operations
                     writeToFile(output1, String.format("%d,%d,%d", i, bo1Counter, time1));
 
                     // The faster alternative to Levetin's algorithm
                     bo2Counter = 0;
                     long time2 = System.currentTimeMillis(); // Starting the time
-                    long res2 = minDistance2(testArray);
+                    long res2 = minDistance2(testArray, false);
                     time2 = System.currentTimeMillis() - time2; // Stopping time
+                    minDistance2(testArray, true);
                     writeToFile(output2, String.format("%d,%d,%d", i, bo2Counter, time2));
                 }
             }
@@ -94,20 +106,33 @@ public class MainAss2 {
     }
 
     /**
-     * A function to find the shortest distance between two data points in an array.
+     * A function to find the shortest distance between two data points in an array. Has an if-statement to check
+     * if it is counting basic operations. This option is added to create a more accurate time measurement
      * @param a An array of data points.
+     * @param count If true the algorithm will count basic operations. If not it won't
      * @return Returns the absolute distance between the two closest data points
      */
-    public static long minDistance(long[] a) {
+    public static long minDistance(long[] a, boolean count) {
         // Assigning a variable to represent the maximum distance between two values.
         // This has to be a long variable because we are operating in the outer bounds of integer. in the case of
         // Math.abs(Integer.MIN_VALUE - 1) we'd en up exceeding the limit of int.
         long dmin = Integer.MAX_VALUE; // as close to infinite as you can get using int
-        for(int i = 0; i < a.length; i++) {
-            for(int j = 0; j < a.length; j++) {
-                bo1Counter++;
-                if(i != j && Math.abs(a[i] - a[j]) < dmin)
-                    dmin = Math.abs(a[i] - a[j]);
+        if (count) {
+            for (int i = 0; i < a.length; i++) {
+                for (int j = 0; j < a.length; j++) {
+                    bo1Counter++;
+                    if (i != j && Math.abs(a[i] - a[j]) < dmin)
+                        dmin = Math.abs(a[i] - a[j]);
+                }
+            }
+            return dmin;
+        }
+        else {
+            for (int i = 0; i < a.length; i++) {
+                for (int j = 0; j < a.length; j++) {
+                    if (i != j && Math.abs(a[i] - a[j]) < dmin)
+                        dmin = Math.abs(a[i] - a[j]);
+                }
             }
         }
         return dmin;
@@ -115,21 +140,33 @@ public class MainAss2 {
 
     /**
      * A function to find the shortest distance between two data points in an array.
-     * This function does not check the distance between points we've already calculated
+     * This function does not check the distance between points we've already calculated. Has an if-statement to check
+     * if it is counting basic operations. This option is added to create a more accurate time measurement
      * @param a An array of data points.
+     * @param count If true the algorithm will count basic operations. If not it won't
      * @return Returns the absolute distance between the two closest data points
      */
-    public static long minDistance2(long[] a) {
+    public static long minDistance2(long[] a, boolean count) {
         long dmin = Integer.MAX_VALUE; // as close to infinite as you can get using int
-        for(int i = 0; i < a.length; i++) {
-            for(int j = i+1; j < a.length; j++) {
-                long temp = Math.abs(a[i] - a[j]);
-                bo2Counter++;
-                if(temp < dmin)
-                    dmin = temp;
+        if(count) {
+            for (int i = 0; i < a.length; i++) {
+                for (int j = i + 1; j < a.length; j++) {
+                    long temp = Math.abs(a[i] - a[j]);
+                    bo2Counter++;
+                    if (temp < dmin)
+                        dmin = temp;
+                }
             }
         }
-
+        else {
+            for (int i = 0; i < a.length; i++) {
+                for (int j = i + 1; j < a.length; j++) {
+                    long temp = Math.abs(a[i] - a[j]);
+                    if (temp < dmin)
+                        dmin = temp;
+                }
+            }
+        }
         return dmin;
     }
 
